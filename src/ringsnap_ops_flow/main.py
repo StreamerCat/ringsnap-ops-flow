@@ -30,6 +30,13 @@ from ringsnap_ops_flow.event_gate import EVENT_TO_MODULE, get_gate
 from ringsnap_ops_flow.state import OpsEvent, OpsEventType, OpsFlowState
 from ringsnap_ops_flow.flows.amp_router_flow import AmpRouterFlow
 
+
+class RingSnapAmpFlow(AmpRouterFlow):
+    """Local AMP-detectable Flow subclass."""
+    pass
+
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
