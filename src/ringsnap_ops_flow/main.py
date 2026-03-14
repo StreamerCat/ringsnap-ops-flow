@@ -24,10 +24,10 @@ from typing import Any, Optional
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from .adapters.posthog_client import capture as ph_capture
-from .config import settings
-from .event_gate import EVENT_TO_MODULE, get_gate
-from .state import OpsEvent, OpsEventType, OpsFlowState
+from ringsnap_ops_flow.adapters.posthog_client import capture as ph_capture
+from ringsnap_ops_flow.config import settings
+from ringsnap_ops_flow.event_gate import EVENT_TO_MODULE, get_gate
+from ringsnap_ops_flow.state import OpsEvent, OpsEventType, OpsFlowState
 
 logging.basicConfig(
     level=logging.INFO,
