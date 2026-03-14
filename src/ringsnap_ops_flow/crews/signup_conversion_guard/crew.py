@@ -1,0 +1,15 @@
+"""Signup conversion guard crew."""
+from __future__ import annotations
+from crewai import Crew, Process
+from .agents import recovery_analyst
+from .tasks import diagnose_signup_failure_task
+
+
+def build_crew(failure_context: str) -> Crew:
+    agent = recovery_analyst()
+    task = diagnose_signup_failure_task(agent=agent, failure_context=failure_context)
+    return Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=False)
+
+
+def run(failure_context: str) -> str:
+    return str(build_crew(failure_context).kickoff())

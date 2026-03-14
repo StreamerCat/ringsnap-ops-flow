@@ -1,0 +1,6 @@
+# CrewAI AMP deployment configuration
+name: ringsnap-ops-flow
+description: "RingSnap Phase 1 GTM Ops — CrewAI Flow control plane"
+entrypoint: src/ringsnap_ops_flow/main.py
+python_version: "3.12"
+env_file: .env

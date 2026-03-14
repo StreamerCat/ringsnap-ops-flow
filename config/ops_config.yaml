@@ -1,0 +1,98 @@
+# RingSnap Phase 1 GTM Ops — Central Configuration
+# Single source of truth for all operational thresholds, model routing, and cost controls.
+# Edit this file to tune system behavior. No code changes needed for threshold adjustments.
+
+execution:
+  # Hard cap on total CrewAI crew executions per day across all modules
+  max_executions_per_day: 500
+  # Maximum retry attempts for any single workflow before alerting
+  max_retries_per_workflow: 3
+  # Maximum rescue attempts (resend link + callback) for a stalled pending signup
+  max_rescue_attempts: 2
+  # Debounce window: identical event+entity within this many seconds is dropped
+  debounce_seconds: 60
+  # Safe mode multiplier: when safe_mode is active, reduce max_executions_per_day by this factor
+  safe_mode_execution_factor: 0.25
+
+thresholds:
+  # Hours before an onboarding is considered stalled (triggers onboarding_activation crew)
+  onboarding_stall_threshold_hours: 24
+  # If overall funnel failure rate exceeds this, trigger signup_conversion_guard
+  funnel_failure_threshold_pct: 0.30
+  # If checkout completion rate drops below this, recommend outbound safe mode
+  checkout_completion_threshold: 0.50
+  # If trial activation failure rate exceeds this, pause Stage 2 provisioning
+  activation_failure_threshold: 0.20
+  # If expensive provisioning failure rate exceeds this, alert immediately
+  expensive_provisioning_failure_threshold: 0.15
+  # Minutes before a duplicate pending signup for the same email is allowed
+  duplicate_signup_cooldown_minutes: 60
+  # Hours before a pending signup expires if checkout never completes
+  pending_signup_expiry_hours: 48
+  # Lead score threshold above which human callback is recommended
+  human_callback_score_threshold: 75
+  # If campaign health metrics drop below this, activate outbound safe mode
+  outbound_safe_mode_threshold: 0.40
+
+models:
+  # Used for: classification, simple summaries, triage scoring
+  # Cost: ~$0.25/1M input tokens
+  cheap_model: "claude-haiku-4-5-20251001"
+  # Used for: analysis, failure triage, recovery decisions, digest assembly
+  # Cost: ~$3/1M input tokens
+  default_model: "claude-sonnet-4-6"
+  # Used for: critical failure analysis, abuse decisions, complex recovery planning
+  # Cost: ~$15/1M input tokens — use sparingly
+  reasoning_model: "claude-opus-4-6"
+
+cost:
+  # Daily LLM spend budget in USD — alert at alert_at_pct, block new executions above budget
+  daily_llm_budget_usd: 10.0
+  # Emit budget warning alert when this fraction of daily budget is consumed
+  alert_at_pct: 0.80
+  # Token cost estimates in USD per 1000 tokens (approximate, for reporting only)
+  token_cost_estimates:
+    claude-haiku-4-5-20251001:
+      input_per_1k: 0.00025
+      output_per_1k: 0.00125
+    claude-sonnet-4-6:
+      input_per_1k: 0.003
+      output_per_1k: 0.015
+    claude-opus-4-6:
+      input_per_1k: 0.015
+      output_per_1k: 0.075
+
+crews:
+  # Per-crew daily execution limits (overrides global max if lower)
+  max_daily_executions:
+    sales_triage: 200
+    signup_conversion_guard: 50
+    activation_recovery: 50
+    outbound_roi_guard: 10
+    onboarding_activation: 50
+    support_triage: 20
+    usage_product_insights: 5
+    cost_cogs_monitor: 10
+    abuse_guard: 30
+    executive_digest: 1
+    prompt_voice_qa: 5
+    telecom_resource_manager: 20
+  # Cooldown between executions for same entity (minutes)
+  cooldown_minutes:
+    default: 60
+    abuse_guard: 10
+    executive_digest: 1380  # ~23 hours (once per day)
+    cost_cogs_monitor: 120
+
+safe_mode:
+  # When safe mode is active:
+  # - Reduce outbound call volume recommendation
+  # - Skip non-critical crew executions
+  # - Skip usage_product_insights and support_triage
+  # - Keep only: activation_recovery, abuse_guard, executive_digest, signup_conversion_guard
+  critical_only_modules:
+    - activation_recovery
+    - abuse_guard
+    - executive_digest
+    - signup_conversion_guard
+    - cost_cogs_monitor

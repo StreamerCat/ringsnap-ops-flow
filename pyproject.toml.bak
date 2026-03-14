@@ -1,0 +1,47 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "ringsnap-ops-flow"
+version = "0.1.0"
+description = "RingSnap Phase 1 GTM Ops orchestration system — CrewAI Flow control plane"
+authors = ["RingSnap Team"]
+readme = "README.md"
+packages = [{ include = "ringsnap_ops_flow", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+crewai = { version = ">=0.83.0,<1.0.0", extras = ["tools"] }
+fastapi = ">=0.115.0,<1.0.0"
+uvicorn = { version = ">=0.32.0,<1.0.0", extras = ["standard"] }
+pydantic = ">=2.9.0,<3.0.0"
+pydantic-settings = ">=2.5.0,<3.0.0"
+supabase = ">=2.10.0,<3.0.0"
+stripe = ">=11.3.0,<12.0.0"
+httpx = ">=0.27.0,<1.0.0"
+python-dotenv = ">=1.0.0,<2.0.0"
+pyyaml = ">=6.0.2,<7.0.0"
+tenacity = ">=9.0.0,<10.0.0"
+posthog = ">=3.0.0,<4.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.3.0,<9.0.0"
+pytest-asyncio = ">=0.24.0,<1.0.0"
+pytest-cov = ">=6.0.0,<7.0.0"
+httpx = ">=0.27.0,<1.0.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/ringsnap_ops_flow"]
+omit = ["tests/*"]
+
+[tool.poetry.scripts]
+ringsnap-ops = "ringsnap_ops_flow.main:run_server"
