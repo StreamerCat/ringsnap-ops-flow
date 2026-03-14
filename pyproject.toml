@@ -9,7 +9,7 @@ description = "RingSnap Phase 1 GTM Ops orchestration system — CrewAI Flow con
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "crewai[tools]>=0.83.0,<1.0.0",
+  "crewai[tools]>=1.10.1,<2.0.0",
   "fastapi>=0.115.0,<1.0.0",
   "uvicorn[standard]>=0.32.0,<1.0.0",
   "pydantic>=2.9.0,<3.0.0",
@@ -39,7 +39,7 @@ packages = [{ include = "ringsnap_ops_flow", from = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-crewai = { version = ">=0.83.0,<1.0.0", extras = ["tools"] }
+crewai = { version = ">=1.10.1,<2.0.0", extras = ["tools"] }
 fastapi = ">=0.115.0,<1.0.0"
 uvicorn = { version = ">=0.32.0,<1.0.0", extras = ["standard"] }
 pydantic = ">=2.9.0,<3.0.0"
