@@ -58,6 +58,7 @@ class OpsEventType(str, Enum):
     ABUSE_RISK_SPIKE = "abuse_or_risk_spike"
     DAILY_DIGEST = "daily_founder_digest"
     BATCHED_INSIGHTS = "batched_product_insight_job"
+    DEPLOY_COMPLETED = "deploy_completed"
 
 
 class AlertSeverity(str, Enum):

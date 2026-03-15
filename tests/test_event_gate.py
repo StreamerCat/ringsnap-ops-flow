@@ -79,10 +79,11 @@ def test_daily_budget_blocks_when_exceeded(event_gate):
 
 
 def test_rate_limit_blocks_after_daily_cap(event_gate):
-    """Module should be blocked after hitting daily execution cap."""
-    # executive_digest has a cap of 1 per day
-    # Simulate hitting the cap
-    event_gate._daily_counts["executive_digest"] = 1
+    """Module should be blocked after hitting configured daily execution cap."""
+    from ringsnap_ops_flow.config import crews as crews_cfg
+
+    limit = crews_cfg.get_max_daily("executive_digest")
+    event_gate._daily_counts["executive_digest"] = limit
 
     allowed, reason = event_gate.should_process(
         OpsEventType.DAILY_DIGEST.value,
