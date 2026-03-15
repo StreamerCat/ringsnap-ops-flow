@@ -17,24 +17,105 @@ if str(SRC) not in sys.path:
 # Lightweight local stubs so tests can run without external deps in CI sandboxes.
 
 if importlib.util.find_spec("pydantic") is None and "pydantic" not in sys.modules:
+    from copy import deepcopy
+    from enum import Enum
+
     pydantic_stub = types.ModuleType("pydantic")
+
+    class _FieldInfo:
+        def __init__(self, default=None, default_factory=None):
+            self.default = default
+            self.default_factory = default_factory
 
     class BaseModel:
         def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
+            from typing import get_type_hints
+            annotations = get_type_hints(self.__class__)
 
-    def Field(default=None, **_kwargs):
-        return default
+            for field_name, field_type in annotations.items():
+                if field_name in kwargs:
+                    value = kwargs[field_name]
+                else:
+                    default_obj = getattr(self.__class__, field_name, None)
+                    if isinstance(default_obj, _FieldInfo):
+                        if default_obj.default_factory is not None:
+                            value = default_obj.default_factory()
+                        else:
+                            value = deepcopy(default_obj.default)
+                    else:
+                        value = deepcopy(default_obj)
+
+                enum_type = field_type if isinstance(field_type, type) and issubclass(field_type, Enum) else None
+                if enum_type is not None and value is not None and not isinstance(value, enum_type):
+                    try:
+                        value = enum_type(value)
+                    except Exception as exc:  # pragma: no cover - stub parity path
+                        raise ValueError(str(exc)) from exc
+
+                setattr(self, field_name, value)
+
+    def Field(default=None, default_factory=None, **_kwargs):
+        return _FieldInfo(default=default, default_factory=default_factory)
 
     pydantic_stub.BaseModel = BaseModel
     pydantic_stub.Field = Field
     sys.modules["pydantic"] = pydantic_stub
 
+
 if importlib.util.find_spec("yaml") is None and "yaml" not in sys.modules:
     yaml_stub = types.ModuleType("yaml")
     yaml_stub.safe_load = lambda _stream: {}
     sys.modules["yaml"] = yaml_stub
+
+
+if importlib.util.find_spec("tenacity") is None and "tenacity" not in sys.modules:
+    tenacity_stub = types.ModuleType("tenacity")
+
+    class RetryError(Exception):
+        pass
+
+    class _StopAfterAttempt:
+        def __init__(self, attempts: int):
+            self.attempts = attempts
+
+    def stop_after_attempt(attempts: int):
+        return _StopAfterAttempt(attempts)
+
+    class _WaitExponential:
+        def __init__(self, **_kwargs):
+            pass
+
+    def wait_exponential(**kwargs):
+        return _WaitExponential(**kwargs)
+
+    class _AttemptContext:
+        def __init__(self, index: int, total: int):
+            self.index = index
+            self.total = total
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, _tb):
+            if exc is None:
+                return True
+            if self.index >= self.total:
+                raise RetryError(str(exc))
+            return True
+
+    class Retrying:
+        def __init__(self, *, stop, wait=None, reraise=False):
+            self._total = stop.attempts if hasattr(stop, "attempts") else 1
+
+        def __iter__(self):
+            for idx in range(1, self._total + 1):
+                yield _AttemptContext(index=idx, total=self._total)
+
+    tenacity_stub.RetryError = RetryError
+    tenacity_stub.Retrying = Retrying
+    tenacity_stub.stop_after_attempt = stop_after_attempt
+    tenacity_stub.wait_exponential = wait_exponential
+    sys.modules["tenacity"] = tenacity_stub
 
 if importlib.util.find_spec("crewai") is None and "crewai" not in sys.modules:
     crewai_stub = types.ModuleType("crewai")

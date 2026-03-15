@@ -65,6 +65,8 @@ curl http://localhost:8080/ops/health
 
 ## Run Tests
 
+If tests fail during collection due to missing dependencies, run `poetry install --with dev` and retry.
+
 ```bash
 # All tests (stub mode — no credentials needed)
 poetry run pytest tests/ -v
@@ -82,18 +84,22 @@ poetry run pytest tests/ --cov=ringsnap_ops_flow --cov-report=term-missing
 
 Use these commands to run the production-safe workflow wrappers. The post-deploy guard can also run automatically when a `deploy_completed` event is posted to `/ops/event`.
 
+Prerequisites for workflow wrappers:
+- `poetry install --with dev`
+- `PYTHONPATH=src` (if package not installed in editable mode)
+- For real PR creation: `GITHUB_TOKEN` plus repo owner/name env vars
+
+
 ```bash
 # Workflow 1: Post-deploy Site Quality Guard (low-risk auto-PR workflow)
-python - <<'PYTHON'
+PYTHONPATH=src poetry run python - <<'PYTHON'
 from ringsnap_ops_flow.flows.repo_execution_flow import run_post_deploy_site_quality_guard
 
 result = run_post_deploy_site_quality_guard(
     trigger="deploy_completed",
     findings=["Lighthouse SEO regression on homepage metadata"],
     path="docs/runbooks/incident.md",
-    updated_content="# incident runbook
-
-Updated metadata guidance.",
+    updated_content="# incident runbook\n\nUpdated metadata guidance.",
     summary="Improve post-deploy metadata guidance from quality guard findings.",
     deployed_urls=["https://ringsnap.com", "https://app.ringsnap.com"],
 )
@@ -101,7 +107,7 @@ print(result.summary)
 PYTHON
 
 # Workflow 2: Critical Flow Recovery Assistant (always PR-only)
-python - <<'PYTHON'
+PYTHONPATH=src poetry run python - <<'PYTHON'
 from ringsnap_ops_flow.flows.repo_execution_flow import run_critical_flow_recovery_assistant
 
 result = run_critical_flow_recovery_assistant(
