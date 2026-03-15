@@ -1,0 +1,41 @@
+version: 1
+
+# Classes that can be patched and PR-opened automatically.
+auto_patch_classes:
+  - marketing_lighthouse
+  - seo_meta_schema
+  - accessibility_ui
+  - docs_runbooks_tests_config
+
+# Classes that may produce code plans, patches, and PRs, but require explicit human approval before patch apply.
+pr_only_classes:
+  - activation_failure_recovery
+  - signup_failure_recovery
+  - support_technical_hotfix
+
+# Classes fully blocked from automation.
+blocked_classes:
+  - billing
+  - provisioning
+  - auth
+  - stripe
+  - vapi
+  - onboarding
+  - webhook
+
+# Extra path-based protections.
+blocked_path_prefixes:
+  - src/ringsnap_ops_flow/deterministic/payment_handler.py
+  - src/ringsnap_ops_flow/deterministic/provisioning_handler.py
+  - src/ringsnap_ops_flow/deterministic/signup_handler.py
+  - src/ringsnap_ops_flow/adapters/stripe_adapter.py
+  - src/ringsnap_ops_flow/adapters/vapi_adapter.py
+  - src/ringsnap_ops_flow/main.py
+
+allowed_low_risk_prefixes:
+  - docs/
+  - tests/
+  - config/
+  - marketing/
+  - website/
+  - web/

@@ -1,5 +1,8 @@
 """Outbound ROI guard tasks."""
+
 from crewai import Task
+
+from ..repo_awareness import repo_inspection_block
 
 
 def evaluate_campaign_health_task(agent, metrics_context: str) -> Task:
@@ -7,6 +10,7 @@ def evaluate_campaign_health_task(agent, metrics_context: str) -> Task:
         description=(
             f"Evaluate outbound campaign health and recommend action.\n\n"
             f"Metrics:\n{metrics_context}\n\n"
+            f"{repo_inspection_block('checkout and activation dependencies that affect outbound ROI')}\n"
             "Output JSON with:\n"
             "- health_status: 'healthy' | 'degraded' | 'critical'\n"
             "- safe_mode_recommended (bool)\n"
@@ -15,6 +19,6 @@ def evaluate_campaign_health_task(agent, metrics_context: str) -> Task:
             "- recommended_actions (list of strings, safe non-destructive only)\n"
             "- summary (2 sentences max)\n"
         ),
-        expected_output="JSON with health_status, safe_mode_recommended, volume_reduction_pct, key_issues, recommended_actions, summary",
+        expected_output="JSON with health_status, actions, and repo-grounded evidence",
         agent=agent,
     )

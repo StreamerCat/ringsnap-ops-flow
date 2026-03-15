@@ -1,10 +1,11 @@
 """Prompt voice QA crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def prompt_qa_analyst(llm=None) -> Agent:
-    return Agent(
+def prompt_qa_analyst(llm=None):
+    return build_agent(
         role="Voice Prompt QA Analyst",
         goal="Verify prompt template variable integrity and validate fallback/objection handling paths",
         backstory=(
@@ -14,6 +15,5 @@ def prompt_qa_analyst(llm=None) -> Agent:
             "You output a structured QA report with pass/fail for each check."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

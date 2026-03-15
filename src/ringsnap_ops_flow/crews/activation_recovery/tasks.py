@@ -1,5 +1,8 @@
 """Activation recovery tasks."""
+
 from crewai import Task
+
+from ..repo_awareness import repo_inspection_block
 
 
 def recovery_plan_task(agent, failure_context: str) -> Task:
@@ -7,6 +10,7 @@ def recovery_plan_task(agent, failure_context: str) -> Task:
         description=(
             f"Analyze this activation failure and produce a recovery plan.\n\n"
             f"Context:\n{failure_context}\n\n"
+            f"{repo_inspection_block('activation, provisioning, and payment failure paths')}\n"
             "Output JSON with:\n"
             "- failure_type: 'payment' | 'provisioning' | 'activation'\n"
             "- failure_point (exact step that failed)\n"
@@ -17,6 +21,6 @@ def recovery_plan_task(agent, failure_context: str) -> Task:
             "- pause_stage2_recommended (bool)\n"
             "- summary (2 sentences max)\n"
         ),
-        expected_output="JSON recovery plan with failure_type, failure_point, safe_retry_steps, alert_severity, mark_for_manual_review, pause_stage2_recommended, summary",
+        expected_output="JSON recovery plan with runtime + repo evidence and safe retry guidance",
         agent=agent,
     )

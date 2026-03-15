@@ -1,10 +1,11 @@
 """Onboarding activation crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def onboarding_coach(llm=None) -> Agent:
-    return Agent(
+def onboarding_coach(llm=None):
+    return build_agent(
         role="Onboarding Success Coach",
         goal="Identify stalled onboarding accounts and recommend the most effective re-engagement action",
         backstory=(
@@ -14,6 +15,5 @@ def onboarding_coach(llm=None) -> Agent:
             "You prefer the lowest-friction action that will get them to their first live call."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

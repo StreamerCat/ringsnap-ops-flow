@@ -1,10 +1,11 @@
 """Abuse guard crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def abuse_analyst(llm=None) -> Agent:
-    return Agent(
+def abuse_analyst(llm=None):
+    return build_agent(
         role="Abuse & Risk Analyst",
         goal="Detect and respond to abuse patterns, fraud signals, and risk spikes",
         backstory=(
@@ -13,7 +14,6 @@ def abuse_analyst(llm=None) -> Agent:
             "You recommend: block_account | flag_for_review | throttle_calls | alert_founder. "
             "You never take irreversible actions automatically — you recommend for human approval."
         ),
-        llm=llm or models.default_model,  # Use default model — abuse decisions are higher stakes
-        verbose=False,
-        allow_delegation=False,
+        llm=llm or models.default_model,
+        enable_repo_read=True,
     )

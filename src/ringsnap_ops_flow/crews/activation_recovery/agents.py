@@ -1,10 +1,11 @@
 """Activation recovery crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def recovery_engineer(llm=None) -> Agent:
-    return Agent(
+def recovery_engineer(llm=None):
+    return build_agent(
         role="Activation Recovery Engineer",
         goal="Analyze payment and provisioning failures and produce a safe, bounded recovery plan",
         backstory=(
@@ -14,6 +15,5 @@ def recovery_engineer(llm=None) -> Agent:
             "when automated recovery is exhausted."
         ),
         llm=llm or models.default_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

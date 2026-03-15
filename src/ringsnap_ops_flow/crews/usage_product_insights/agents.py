@@ -1,10 +1,11 @@
 """Usage product insights crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def product_analyst(llm=None) -> Agent:
-    return Agent(
+def product_analyst(llm=None):
+    return build_agent(
         role="Product Usage Analyst",
         goal="Identify actionable product insights from batched usage data and funnel metrics",
         backstory=(
@@ -14,6 +15,5 @@ def product_analyst(llm=None) -> Agent:
             "You are not triggered by individual events — only batched summaries."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=False,
     )

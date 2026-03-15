@@ -1,10 +1,11 @@
 """Signup conversion guard agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def recovery_analyst(llm=None) -> Agent:
-    return Agent(
+def recovery_analyst(llm=None):
+    return build_agent(
         role="Signup Recovery Analyst",
         goal="Diagnose signup failures and recommend the safest non-destructive recovery action",
         backstory=(
@@ -14,6 +15,5 @@ def recovery_analyst(llm=None) -> Agent:
             "You never recommend destructive actions or changes to production infrastructure."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )
