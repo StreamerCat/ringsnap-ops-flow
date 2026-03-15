@@ -67,6 +67,30 @@ if importlib.util.find_spec("crewai") is None and "crewai" not in sys.modules:
     crewai_stub.Process = Process
     sys.modules["crewai"] = crewai_stub
 
+if "crewai.flow" not in sys.modules:
+    crewai_flow_stub = types.ModuleType("crewai.flow")
+    sys.modules["crewai.flow"] = crewai_flow_stub
+
+if "crewai.flow.flow" not in sys.modules:
+    crewai_flow_flow_stub = types.ModuleType("crewai.flow.flow")
+
+    class Flow:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __class_getitem__(cls, _item):
+            return cls
+
+    def start(*_args, **_kwargs):
+        def deco(fn):
+            return fn
+        return deco
+
+    crewai_flow_flow_stub.Flow = Flow
+    crewai_flow_flow_stub.start = start
+    sys.modules["crewai.flow.flow"] = crewai_flow_flow_stub
+
+
 if "crewai.tools" not in sys.modules:
     tools_stub = types.ModuleType("crewai.tools")
 
@@ -77,6 +101,62 @@ if "crewai.tools" not in sys.modules:
 
     tools_stub.BaseTool = BaseTool
     sys.modules["crewai.tools"] = tools_stub
+
+
+if importlib.util.find_spec("fastapi") is None and "fastapi" not in sys.modules:
+    fastapi_stub = types.ModuleType("fastapi")
+
+    class HTTPException(Exception):
+        def __init__(self, status_code: int, detail: str):
+            super().__init__(detail)
+            self.status_code = status_code
+            self.detail = detail
+
+    class BackgroundTasks:
+        def add_task(self, _fn, *_args, **_kwargs):
+            return None
+
+    class Request:
+        headers = {}
+
+        async def json(self):
+            return {}
+
+    class FastAPI:
+        def __init__(self, **_kwargs):
+            pass
+
+        def get(self, _path):
+            def deco(fn):
+                return fn
+            return deco
+
+        def post(self, _path):
+            def deco(fn):
+                return fn
+            return deco
+
+    def Depends(dep=None):
+        return dep
+
+    fastapi_stub.FastAPI = FastAPI
+    fastapi_stub.HTTPException = HTTPException
+    fastapi_stub.BackgroundTasks = BackgroundTasks
+    fastapi_stub.Request = Request
+    fastapi_stub.Depends = Depends
+    sys.modules["fastapi"] = fastapi_stub
+
+if "fastapi.responses" not in sys.modules:
+    fastapi_responses_stub = types.ModuleType("fastapi.responses")
+
+    class JSONResponse:
+        def __init__(self, content=None, status_code: int = 200):
+            self.content = content
+            self.status_code = status_code
+
+    fastapi_responses_stub.JSONResponse = JSONResponse
+    sys.modules["fastapi.responses"] = fastapi_responses_stub
+
 
 
 @pytest.fixture

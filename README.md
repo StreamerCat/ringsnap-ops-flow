@@ -77,6 +77,70 @@ poetry run pytest tests/voice_qa/ -v
 poetry run pytest tests/ --cov=ringsnap_ops_flow --cov-report=term-missing
 ```
 
+
+## Production-Safe Rollout Workflows (Manual Run)
+
+Use these commands to run the production-safe workflow wrappers. The post-deploy guard can also run automatically when a `deploy_completed` event is posted to `/ops/event`.
+
+```bash
+# Workflow 1: Post-deploy Site Quality Guard (low-risk auto-PR workflow)
+python - <<'PYTHON'
+from ringsnap_ops_flow.flows.repo_execution_flow import run_post_deploy_site_quality_guard
+
+result = run_post_deploy_site_quality_guard(
+    trigger="deploy_completed",
+    findings=["Lighthouse SEO regression on homepage metadata"],
+    path="docs/runbooks/incident.md",
+    updated_content="# incident runbook
+
+Updated metadata guidance.",
+    summary="Improve post-deploy metadata guidance from quality guard findings.",
+    deployed_urls=["https://ringsnap.com", "https://app.ringsnap.com"],
+)
+print(result.summary)
+PYTHON
+
+# Workflow 2: Critical Flow Recovery Assistant (always PR-only)
+python - <<'PYTHON'
+from ringsnap_ops_flow.flows.repo_execution_flow import run_critical_flow_recovery_assistant
+
+result = run_critical_flow_recovery_assistant(
+    trigger="critical_flow_failure",
+    findings=["Provisioning webhook timeout caused activation drop-offs"],
+    path="src/ringsnap_ops_flow/crews/activation_recovery/tasks.py",
+    updated_content="# placeholder patch content",
+    summary="Harden diagnostics and retry notes for activation failures.",
+    human_approved_patch=False,
+)
+print(result.summary)
+PYTHON
+```
+
+
+### Fully automatic trigger (post-deploy guard)
+
+If your deploy system can call webhooks, trigger the guard automatically:
+
+```bash
+curl -X POST http://localhost:8080/ops/event \
+  -H 'Content-Type: application/json' \
+  -H 'x-ops-secret: YOUR_OPS_WEBHOOK_SECRET' \
+  -d '{
+    "event_type": "deploy_completed",
+    "source": "deploy",
+    "entity_id": "deploy_2026_03_15_001",
+    "payload": {
+      "findings": ["Lighthouse SEO regression on homepage metadata"],
+      "deployed_urls": ["https://ringsnap.com", "https://app.ringsnap.com"],
+      "path": "docs/runbooks/incident.md",
+      "updated_content": "# incident runbook\n\nUpdated metadata guidance.",
+      "summary": "Improve post-deploy metadata guidance from quality guard findings."
+    }
+  }'
+```
+
+The critical flow recovery assistant is intentionally PR-only: it helps diagnose activation failures (trial creation, provisioning, onboarding, Stripe/Vapi/auth/webhook surfaces), proposes a scoped patch, runs targeted validation, and reports blocked actions for human review before any merge or deploy.
+
 ## Rollback
 
 See `docs/runbooks/rollback.md` for full rollback procedure.
@@ -113,10 +177,10 @@ ringsnap_ops_flow/
 
 ## Approved Event Types
 
-Only these 8 events trigger CrewAI:
+These approved events are accepted by `/ops/event` routing:
 
-| Event | Crew(s) | Model Tier |
-|-------|---------|-----------|
+| Event | Route | Model Tier |
+|-------|-------|-----------|
 | `qualified_lead_wants_trial_or_paid` | sales_triage | cheap (haiku) |
 | `payment_failure` | activation_recovery | default (sonnet) |
 | `signup_or_account_creation_failure` | signup_conversion_guard | cheap |
@@ -125,6 +189,7 @@ Only these 8 events trigger CrewAI:
 | `abuse_or_risk_spike` | abuse_guard | default |
 | `daily_founder_digest` | executive_digest | default |
 | `batched_product_insight_job` | usage_product_insights + outbound_roi_guard | cheap |
+| `deploy_completed` | repo_execution_lane (post-deploy guard) | n/a (policy-gated patch lane) |
 
 ## Cost Controls
 
