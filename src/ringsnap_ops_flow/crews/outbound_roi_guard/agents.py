@@ -1,10 +1,11 @@
 """Outbound ROI guard agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def roi_analyst(llm=None) -> Agent:
-    return Agent(
+def roi_analyst(llm=None):
+    return build_agent(
         role="Outbound ROI Analyst",
         goal="Evaluate outbound campaign health metrics and recommend safe mode or volume adjustments",
         backstory=(
@@ -13,6 +14,5 @@ def roi_analyst(llm=None) -> Agent:
             "downstream conversion systems degrade. You prefer reducing volume over pausing entirely."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

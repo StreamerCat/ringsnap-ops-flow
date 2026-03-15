@@ -1,6 +1,6 @@
 """Sales triage crew tasks."""
+
 from crewai import Task
-from .agents import lead_qualifier
 
 
 def score_lead_task(agent: "Agent", lead_context: str) -> Task:
@@ -8,6 +8,8 @@ def score_lead_task(agent: "Agent", lead_context: str) -> Task:
         description=(
             f"Score this qualified lead and determine checkout strategy.\n\n"
             f"Lead context:\n{lead_context}\n\n"
+            "This is a runtime-only decision task. Do not use repo inspection unless the payload "
+            "explicitly references a code/config incident.\n"
             "Output JSON with:\n"
             "- lead_score (0-100)\n"
             "- is_high_intent (bool)\n"

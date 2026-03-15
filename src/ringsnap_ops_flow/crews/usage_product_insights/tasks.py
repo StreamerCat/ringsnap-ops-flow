@@ -1,4 +1,5 @@
 """Usage product insights tasks."""
+
 from crewai import Task
 
 
@@ -7,6 +8,8 @@ def analyze_usage_task(agent, usage_context: str) -> Task:
         description=(
             f"Analyze this batched usage data and produce product insights.\n\n"
             f"Data:\n{usage_context}\n\n"
+            "Primary evidence is usage telemetry in this payload. Mention repo assumptions only as follow-up "
+            "validation suggestions, not as facts.\n"
             "Output JSON with:\n"
             "- top_insights (list of up to 5 strings)\n"
             "- churn_risk_signals (list of strings)\n"

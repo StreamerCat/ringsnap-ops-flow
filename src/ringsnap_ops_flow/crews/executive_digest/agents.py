@@ -1,10 +1,11 @@
 """Executive digest crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def digest_writer(llm=None) -> Agent:
-    return Agent(
+def digest_writer(llm=None):
+    return build_agent(
         role="Executive Digest Writer",
         goal="Write a concise, actionable daily operational digest for the RingSnap founder",
         backstory=(
@@ -15,6 +16,5 @@ def digest_writer(llm=None) -> Agent:
             "You output markdown, formatted for easy scanning."
         ),
         llm=llm or models.default_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=False,
     )

@@ -1,10 +1,11 @@
 """Support triage crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def support_triager(llm=None) -> Agent:
-    return Agent(
+def support_triager(llm=None):
+    return build_agent(
         role="Support Ticket Triager",
         goal="Classify batched support tickets by priority and category, flag urgent ones",
         backstory=(
@@ -14,6 +15,5 @@ def support_triager(llm=None) -> Agent:
             "You process tickets in batches, not one at a time."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

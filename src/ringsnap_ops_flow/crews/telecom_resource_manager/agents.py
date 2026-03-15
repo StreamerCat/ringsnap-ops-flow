@@ -1,10 +1,11 @@
 """Telecom resource manager crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def telecom_analyst(llm=None) -> Agent:
-    return Agent(
+def telecom_analyst(llm=None):
+    return build_agent(
         role="Telecom Resource Analyst",
         goal="Check telecom resource availability and diagnose provisioning dependency failures",
         backstory=(
@@ -15,6 +16,5 @@ def telecom_analyst(llm=None) -> Agent:
             "or modifying live assistant configurations without human approval."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=True,
     )

@@ -1,4 +1,5 @@
 """Cost COGS monitor tasks."""
+
 from crewai import Task
 
 
@@ -7,6 +8,8 @@ def analyze_costs_task(agent, cost_context: str) -> Task:
         description=(
             f"Analyze current operational costs and recommend actions.\n\n"
             f"Cost data:\n{cost_context}\n\n"
+            "Treat this as a runtime metrics task. Only reference repo code when the context includes "
+            "a concrete code-related anomaly to validate.\n"
             "Output JSON with:\n"
             "- budget_status: 'ok' | 'warning' | 'critical'\n"
             "- daily_llm_cost_usd (float)\n"

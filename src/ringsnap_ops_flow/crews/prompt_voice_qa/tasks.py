@@ -1,5 +1,8 @@
 """Prompt voice QA tasks."""
+
 from crewai import Task
+
+from ..repo_awareness import repo_inspection_block
 
 
 def qa_prompt_template_task(agent, prompt_context: str) -> Task:
@@ -7,6 +10,7 @@ def qa_prompt_template_task(agent, prompt_context: str) -> Task:
         description=(
             f"Run QA checks on this Vapi voice prompt template.\n\n"
             f"Template:\n{prompt_context}\n\n"
+            f"{repo_inspection_block('prompt templates, variable contracts, and fallback scripts in the app repo')}\n"
             "Check for:\n"
             "1. Unresolved template variables (e.g. {{undefined_var}})\n"
             "2. Missing fallback script for failed tool calls\n"
@@ -20,6 +24,6 @@ def qa_prompt_template_task(agent, prompt_context: str) -> Task:
             "- critical_failures (list of strings)\n"
             "- recommendations (list of strings)\n"
         ),
-        expected_output="JSON QA report with overall_status, checks array, critical_failures, recommendations",
+        expected_output="JSON QA report with repo-validated checks and recommendations",
         agent=agent,
     )

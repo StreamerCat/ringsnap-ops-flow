@@ -1,10 +1,11 @@
 """Cost COGS monitor crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def cost_analyst(llm=None) -> Agent:
-    return Agent(
+def cost_analyst(llm=None):
+    return build_agent(
         role="Cost & COGS Monitor",
         goal="Track LLM spend, provisioning COGS, and outbound costs against budget thresholds",
         backstory=(
@@ -14,6 +15,5 @@ def cost_analyst(llm=None) -> Agent:
             "You optimize for low execution count and never recommend spending more to save less."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=False,
     )

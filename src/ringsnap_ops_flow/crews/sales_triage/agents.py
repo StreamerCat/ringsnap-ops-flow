@@ -1,10 +1,11 @@
 """Sales triage crew agents."""
-from crewai import Agent
+
 from ...config import models
+from ..repo_awareness import build_agent
 
 
-def lead_qualifier(llm=None) -> Agent:
-    return Agent(
+def lead_qualifier(llm=None):
+    return build_agent(
         role="Lead Qualifier",
         goal="Accurately score inbound qualified leads for intent, fit, and conversion likelihood",
         backstory=(
@@ -14,6 +15,5 @@ def lead_qualifier(llm=None) -> Agent:
             "You keep analysis concise and output structured JSON."
         ),
         llm=llm or models.cheap_model,
-        verbose=False,
-        allow_delegation=False,
+        enable_repo_read=False,
     )
