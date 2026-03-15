@@ -77,6 +77,45 @@ poetry run pytest tests/voice_qa/ -v
 poetry run pytest tests/ --cov=ringsnap_ops_flow --cov-report=term-missing
 ```
 
+
+## Production-Safe Rollout Workflows (Manual Run)
+
+Use these commands to run the newly added production-safe workflow wrappers without invoking live LLM crews.
+
+```bash
+# Workflow 1: Post-deploy Site Quality Guard (low-risk auto-PR workflow)
+python - <<'PYTHON'
+from ringsnap_ops_flow.flows.repo_execution_flow import run_post_deploy_site_quality_guard
+
+result = run_post_deploy_site_quality_guard(
+    trigger="deploy_completed",
+    findings=["Lighthouse SEO regression on homepage metadata"],
+    path="docs/runbooks/incident.md",
+    updated_content="# incident runbook
+
+Updated metadata guidance.",
+    summary="Improve post-deploy metadata guidance from quality guard findings.",
+    deployed_urls=["https://ringsnap.com", "https://app.ringsnap.com"],
+)
+print(result.summary)
+PYTHON
+
+# Workflow 2: Critical Flow Recovery Assistant (always PR-only)
+python - <<'PYTHON'
+from ringsnap_ops_flow.flows.repo_execution_flow import run_critical_flow_recovery_assistant
+
+result = run_critical_flow_recovery_assistant(
+    trigger="critical_flow_failure",
+    findings=["Provisioning webhook timeout caused activation drop-offs"],
+    path="src/ringsnap_ops_flow/crews/activation_recovery/tasks.py",
+    updated_content="# placeholder patch content",
+    summary="Harden diagnostics and retry notes for activation failures.",
+    human_approved_patch=False,
+)
+print(result.summary)
+PYTHON
+```
+
 ## Rollback
 
 See `docs/runbooks/rollback.md` for full rollback procedure.
