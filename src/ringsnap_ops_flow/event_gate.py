@@ -43,6 +43,7 @@ EVENT_TO_MODULE: dict[str, str] = {
     OpsEventType.ABUSE_RISK_SPIKE.value: "abuse_guard",
     OpsEventType.DAILY_DIGEST.value: "executive_digest",
     OpsEventType.BATCHED_INSIGHTS.value: "usage_product_insights",
+    OpsEventType.DEPLOY_COMPLETED.value: "repo_execution_lane",
 }
 
 

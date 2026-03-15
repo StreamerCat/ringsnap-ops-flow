@@ -29,6 +29,7 @@ from ringsnap_ops_flow.config import settings
 from ringsnap_ops_flow.event_gate import EVENT_TO_MODULE, get_gate
 from ringsnap_ops_flow.state import OpsEvent, OpsEventType, OpsFlowState
 from ringsnap_ops_flow.flows.amp_router_flow import AmpRouterFlow
+from ringsnap_ops_flow.flows.repo_execution_flow import run_post_deploy_site_quality_guard
 
 
 class RingSnapAmpFlow(AmpRouterFlow):
@@ -62,6 +63,44 @@ def _verify_webhook_secret(request: Request) -> None:
     incoming = request.headers.get("x-ops-secret", "")
     if not secrets.compare_digest(incoming, settings.ops_webhook_secret):
         raise HTTPException(status_code=401, detail="Invalid ops webhook secret")
+
+
+def _run_post_deploy_guard(event: OpsEvent) -> None:
+    payload = event.payload or {}
+    path = payload.get("path", "")
+    updated_content = payload.get("updated_content", "")
+    summary = payload.get("summary", "")
+
+    if not path or not updated_content:
+        logger.warning(
+            "main.post_deploy_guard_blocked reason=missing_patch_payload trigger=%s payload_keys=%s",
+            event.event_type.value,
+            sorted(payload.keys()),
+        )
+        return
+
+    findings = payload.get("findings") or ["Automated post-deploy quality guard run."]
+    deployed_urls = payload.get("deployed_urls") or []
+    result = run_post_deploy_site_quality_guard(
+        trigger=event.event_type.value,
+        findings=findings,
+        path=path,
+        updated_content=updated_content,
+        summary=summary or "Post-deploy quality guard remediation patch.",
+        deployed_urls=deployed_urls,
+    )
+
+    logger.info(
+        "main.post_deploy_guard_summary trigger=%s findings=%s files_changed=%s tests_run=%s pr_opened=%s blocked_actions=%s next_step=%s",
+        result.summary.trigger,
+        result.summary.findings,
+        result.summary.files_changed,
+        result.summary.tests_run,
+        result.summary.pr_opened,
+        result.summary.blocked_actions,
+        result.summary.next_step,
+    )
+
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +159,9 @@ async def _process_event(event: OpsEvent) -> None:
             if not settings.is_stub_mode:
                 from .crews.signup_conversion_guard.crew import run
                 run(context)
+
+        elif event.event_type == OpsEventType.DEPLOY_COMPLETED:
+            _run_post_deploy_guard(event)
 
         elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
         gate.record_execution(module_name=module, event_type=event.event_type.value)
